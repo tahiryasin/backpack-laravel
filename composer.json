@@ -6,7 +6,7 @@
     "type": "project",
     "require": {
         "php": ">=7.0.0",
-        "backpack/base": "0.7.x",
+        "backpack/base": "^0.8.7",
         "backpack/crud": "^3.2",
         "backpack/generators": "^1.1",
         "fideloper/proxy": "~3.3",

@@ -1,5 +1,3 @@
-"use strict";
-
 (function(editors, elFinder) {
 	if (typeof define === 'function' && define.amd) {
 		define(['elfinder'], editors);
@@ -8,9 +6,11 @@
 		elFinder.prototype._options.commandsOptions.edit.editors = optEditors.concat(editors(elFinder));
 	}
 }(function(elFinder) {
-	var // get query of getfile
+	"use strict";
+	var apps = {},
+		// get query of getfile
 		getfile = window.location.search.match(/getfile=([a-z]+)/),
-		useRequire = (typeof define === 'function' && define.amd),
+		useRequire = elFinder.hasRequire,
 		hasFlash = (function() {
 			var hasFlash;
 			try {
@@ -77,7 +77,7 @@
 				p, ifm, url, node;
 			if (pixlr) {
 				// case of redirected from pixlr.com
-				p = window.parent
+				p = window.parent;
 				ifm = p.$('#'+pixlr[1]+'iframe').hide();
 				node = p.$('#'+pixlr[1]).data('resizeoff')();
 				if (image[1].substr(0, 4) === 'http') {
@@ -117,10 +117,10 @@
 				file = this.file,
 				src = 'https://pixlr.com/'+mode+'/?s=c',
 				myurl = window.location.href.toString().replace(/#.*$/, ''),
-				error = function() {
+				error = function(error) {
 					container.remove();
 					node.data('loading')(true);
-					fm.error('Can not launch Pixlr.');
+					fm.error(error || 'Can not launch Pixlr.');
 				},
 				launch = function() {
 					errtm = setTimeout(error, 10000);
@@ -146,6 +146,12 @@
 						})
 						.on('load', function() {
 							errtm && clearTimeout(errtm);
+							setTimeout(function() {
+								if (container.is(':hidden')) {
+									error('Please disable your ad blocker.');
+								}
+							}, 1000);
+							fm.toFront(container);
 						})
 						.on('error', error)
 						.appendTo(elfNode.hasClass('elfinder-fullscreen')? elfNode : 'body');
@@ -288,7 +294,6 @@
 					init = function(onload) {
 						var getLang = function() {
 								var langMap = {
-									'jp' : 'ja',
 									'zh_TW' : 'zh_HANT',
 									'zh_CN' : 'zh_HANS'
 								};
@@ -340,6 +345,7 @@
 							maxSize: 2048,
 							language: getLang()
 						});
+						container.css('z-index', $(base).closest('.elfinder-dialog').css('z-index'));
 						// return editor instance
 						dfrd.resolve(featherEditor);
 					},
@@ -376,7 +382,7 @@
 			// ACE Editor
 			// called on initialization of elFinder cmd edit (this: this editor's config object)
 			setup : function(opts, fm) {
-				if (fm.UA.ltIE8) {
+				if (fm.UA.ltIE8 || !fm.options.cdns.ace) {
 					this.disabled = true;
 				}
 			},
@@ -567,7 +573,7 @@
 			// CodeMirror
 			// called on initialization of elFinder cmd edit (this: this editor's config object)
 			setup : function(opts, fm) {
-				if (fm.UA.ltIE10) {
+				if (fm.UA.ltIE10 || !fm.options.cdns.codemirror) {
 					this.disabled = true;
 				}
 			},
@@ -711,7 +717,7 @@
 			// SimpleMDE
 			// called on initialization of elFinder cmd edit (this: this editor's config object)
 			setup : function(opts, fm) {
-				if (fm.UA.ltIE10) {
+				if (fm.UA.ltIE10 || !fm.options.cdns.simplemde) {
 					this.disabled = true;
 				}
 			},
@@ -731,8 +737,8 @@
 							editor, editorBase;
 						
 						// fit height function
-						textarea._setHeight = function(h) {
-							var h    = h || base.height(),
+						textarea._setHeight = function(height) {
+							var h    = height || base.height(),
 								ctrH = 0,
 								areaH;
 							base.children('.editor-toolbar,.editor-statusbar').each(function() {
@@ -805,8 +811,12 @@
 			},
 			exts  : ['htm', 'html', 'xhtml'],
 			setup : function(opts, fm) {
-				if (opts.extraOptions && opts.extraOptions.managerUrl) {
-					this.managerUrl = opts.extraOptions.managerUrl;
+				if (!fm.options.cdns.ckeditor) {
+					this.disabled = true;
+				} else {
+					if (opts.extraOptions && opts.extraOptions.managerUrl) {
+						this.managerUrl = opts.extraOptions.managerUrl;
+					}
 				}
 			},
 			load : function(textarea) {
@@ -856,10 +866,10 @@
 						CKEDITOR.on('dialogDefinition', function(e) {
 							var dlg = e.data.definition.dialog;
 							dlg.on('show', function(e) {
-								fm.getUI().append($('.cke_dialog_background_cover')).append(this.getElement().$)
+								fm.getUI().append($('.cke_dialog_background_cover')).append(this.getElement().$);
 							});
 							dlg.on('hide', function(e) {
-								$('body:first').append($('.cke_dialog_background_cover')).append(this.getElement().$)
+								$('body:first').append($('.cke_dialog_background_cover')).append(this.getElement().$);
 							});
 						});
 					};
@@ -899,8 +909,12 @@
 			},
 			exts  : ['htm', 'html', 'xhtml'],
 			setup : function(opts, fm) {
-				if (opts.extraOptions && opts.extraOptions.managerUrl) {
-					this.managerUrl = opts.extraOptions.managerUrl;
+				if (!fm.options.cdns.tinymce) {
+					this.disabled = true;
+				} else {
+					if (opts.extraOptions && opts.extraOptions.managerUrl) {
+						this.managerUrl = opts.extraOptions.managerUrl;
+					}
 				}
 			},
 			load : function(textarea) {
@@ -915,9 +929,9 @@
 						// set base height
 						base.height(h);
 						// fit height function
-						textarea._setHeight = function(h) {
+						textarea._setHeight = function(height) {
 							var base = $(this).parent(),
-								h    = h || base.height(),
+								h    = height || base.height(),
 								ctrH = 0,
 								areaH;
 							base.find('.mce-container-body:first').children('.mce-toolbar,.mce-toolbar-grp,.mce-statusbar').each(function() {
@@ -1025,6 +1039,126 @@
 			resize : function(textarea, instance, e, data) {
 				// fit height to base node on dialog resize
 				instance && textarea._setHeight();
+			}
+		},
+		{
+			info : {
+				name : 'Zoho Editor',
+				iconImg : 'img/edit_zohooffice.png',
+				cmdCheck : 'ZohoOffice',
+				preventGet: true,
+				hideButtons: true
+			},
+			mimes : [
+				'application/msword',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				//'application/pdf',
+				'application/vnd.oasis.opendocument.text',
+				'application/rtf',
+				'text/html',
+				'application/vnd.ms-excel',
+				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				'application/vnd.oasis.opendocument.spreadsheet',
+				'application/vnd.sun.xml.calc',
+				'text/csv',
+				'text/tab-separated-values',
+				'application/vnd.ms-powerpoint',
+				'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+				'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+				'application/vnd.oasis.opendocument.presentation',
+				'application/vnd.sun.xml.impress'
+			],
+			html : '<iframe style="width:100%;max-height:100%;border:none;"></iframe>',
+			// setup on elFinder bootup
+			setup : function(opts, fm) {
+				if (fm.UA.Mobile || fm.UA.ltIE8) {
+					this.disabled = true;
+				}
+			},
+			// Prepare on before show dialog
+			prepare : function(base, dialogOpts, file) {
+				var elfNode = base.editor.fm.getUI();
+				$(base).height(elfNode.height());
+				dialogOpts.width = Math.max(dialogOpts.width, elfNode.width() * 0.8);
+			},
+			// Initialization of editing node (this: this editors HTML node)
+			init : function(id, file, dum, fm) {
+				var ta = this,
+					ifm = $(this).hide(),
+					spnr = $('<div/>')
+						.css({
+							position: 'absolute',
+							top: '50%',
+							textAlign: 'center',
+							width: '100%',
+							fontSize: '16pt'
+						})
+						.html(fm.i18n('nowLoading') + '<span class="elfinder-spinner"/>')
+						.appendTo(ifm.parent()),
+					cdata = function() {
+						var data = '';
+						$.each(fm.options.customData, function(key, val) {
+							data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(val);
+						});
+						return data;
+					};
+				
+				$(ta).data('xhr', fm.request({
+					data: {
+						cmd: 'editor',
+						name: 'ZohoOffice',
+						method: 'init',
+						'args[target]': file.hash,
+						'args[lang]' : fm.lang,
+						'args[cdata]' : cdata
+					},
+					preventDefault : true
+				}).done(function(data) {
+					if (data.zohourl) {
+						ifm.attr('src', data.zohourl).show().height('100%');
+					} else {
+						data.error && fm.error(data.error);
+						ta.elfinderdialog('destroy');
+					}
+				}).fail(function(error) {
+					error && fm.error(error);
+					ta.elfinderdialog('destroy');
+				}).always(function() {
+					spnr.remove();
+				}));
+			},
+			load : function() {},
+			getContent : function() {},
+			save : function() {},
+			// Before dialog close
+			beforeclose : function(base) {
+				var dfd = $.Deferred(),
+					ab = 'about:blank';
+				base.src = ab;
+				setTimeout(function() {
+					var src;
+					try {
+						src = base.contentWindow.location.href;
+					} catch(e) {
+						src = null;
+					}
+					if (src === ab) {
+						dfd.resolve();
+					} else {
+						dfd.reject();
+					}
+				}, 10);
+				return dfd;
+			},
+			// On dialog closed
+			close : function(ta) {
+				var fm = this.fm,
+					xhr = $(ta).data('xhr');
+				if (xhr.state() === 'pending') {
+					xhr.reject();
+				} else {
+					fm.sync(fm.cwd().hash);
+				}
 			}
 		},
 		{
