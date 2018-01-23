@@ -1,5 +1,5 @@
-# laravel-rbac-skelton
-RBAC Skelton app based on Laravel 5.5.3
+# backpack-laravel
+Laravel 5.5.3 with Backpack 0.7.25 ready to use 
 
 
 ## Installation Steps:
