@@ -2,18 +2,17 @@
 
 namespace App;
 
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Backpack\CRUD\CrudTrait;
 use Illuminate\Support\Facades\Hash;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
 
-    use HasApiTokens,
-        Notifiable,
-        CrudTrait;
+    use Notifiable, CrudTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -33,11 +32,45 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-    public function setPasswordAttribute($pass)
-    {
+//    public function setPasswordAttribute($pass)
+//    {
+//
+//        if($pass)
+//        $this->attributes['password'] = Hash::make($pass);
+//    }
 
-        if($pass)
-        $this->attributes['password'] = Hash::make($pass);
+    /**
+     * Get the identifier that will be stored in the subject claim of the JWT.
+     *
+     * @return mixed
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
     }
 
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+    
+    
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+    
+    /**
+    * The profile that belong to the user.
+    */
+    public function profile()
+    {
+        return $this->hasOne('App\Models\UserProfile', 'user_id');
+    }
 }

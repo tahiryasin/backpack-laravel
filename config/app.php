@@ -168,7 +168,7 @@ return [
         */
         Backpack\Base\BaseServiceProvider::class,
         Backpack\CRUD\CrudServiceProvider::class,
-        Backpack\Generators\GeneratorsServiceProvider::class,
+//        Backpack\Generators\GeneratorsServiceProvider::class,
         /*
          * Package Service Providers...
          */
