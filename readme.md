@@ -12,3 +12,4 @@ Laravel 5.5.3 with Backpack 0.7.25 ready to use
 6. Configure database credentials `$ vi .env`
 7. `$ php artisan migrate`
 8. `$ php artisan serve`
+9. `$ php artisan jwt:secret`
